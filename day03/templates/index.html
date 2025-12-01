@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Document Q&A System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-item {
+            font-size: 1.1em;
+        }
+
+        .stats-item strong {
+            font-size: 1.5em;
+            display: block;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .answer-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .answer-section.show {
+            display: block;
+        }
+
+        .answer-box {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .answer-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .answer-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .sources {
+            margin-top: 20px;
+        }
+
+        .source-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .source-title {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .source-score {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .source-preview {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+            border-left: 2px solid #e0e0e0;
+            padding-left: 15px;
+            margin-top: 10px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .supported-formats {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>RAG Document Q&A System</h1>
+            <p class="subtitle">Upload documents and ask questions powered by AI</p>
+        </header>
+
+        <div class="stats">
+            <div class="stats-item">
+                <strong id="docCount">{{ doc_count }}</strong>
+                Document Chunks in Database
+            </div>
+            <button class="btn btn-danger" onclick="clearDatabase()">Clear Database</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Upload Document</h2>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <p>Click to select file or drag and drop</p>
+                    <p class="supported-formats">Supported: PDF, EPUB, HTML, PPTX</p>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf,.epub,.html,.pptx,.ppt">
+                <div id="uploadStatus"></div>
+            </div>
+
+            <div class="card">
+                <h2>Ask a Question</h2>
+                <input type="text" class="question-input" id="questionInput" placeholder="What would you like to know?">
+                <button class="btn" onclick="askQuestion()">Ask Question</button>
+                <div class="loading" id="questionLoading">
+                    <div class="spinner"></div>
+                    <p>Searching and generating answer...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="answer-section" id="answerSection">
+            <h2>Answer</h2>
+            <div class="answer-box">
+                <h3>Response</h3>
+                <div class="answer-text" id="answerText"></div>
+                <button class="btn" id="translateBtn" style="display: none; margin-top: 15px;" onclick="translateAnswer()">
+                    🌐 Translate to English
+                </button>
+            </div>
+
+            <div class="sources">
+                <h3>Sources</h3>
+                <div id="sourcesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const questionInput = document.getElementById('questionInput');
+        const answerSection = document.getElementById('answerSection');
+        const answerText = document.getElementById('answerText');
+        const sourcesContainer = document.getElementById('sourcesContainer');
+        const questionLoading = document.getElementById('questionLoading');
+        const docCount = document.getElementById('docCount');
+        const translateBtn = document.getElementById('translateBtn');
+
+        let currentAnswer = '';
+        let originalAnswer = '';  // Store original for toggling back
+
+        // Function to detect if text contains Chinese characters
+        function containsChinese(text) {
+            return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text);
+        }
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadStatus.innerHTML = '<div class="loading show"><div class="spinner"></div><p>Uploading and processing...</p></div>';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    uploadStatus.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+                } else {
+                    uploadStatus.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    docCount.textContent = data.total_docs;
+                }
+            })
+            .catch(error => {
+                uploadStatus.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            });
+        }
+
+        function askQuestion() {
+            const question = questionInput.value.trim();
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            answerSection.classList.remove('show');
+            questionLoading.classList.add('show');
+
+            fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question: question })
+            })
+            .then(response => response.json())
+            .then(data => {
+                questionLoading.classList.remove('show');
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                currentAnswer = data.answer;
+                originalAnswer = data.answer;
+                answerText.textContent = data.answer;
+
+                // Show translate button if answer contains Chinese
+                if (containsChinese(data.answer)) {
+                    translateBtn.style.display = 'inline-block';
+                    translateBtn.textContent = '🌐 Translate to English';
+                    translateBtn.disabled = false;
+                } else {
+                    translateBtn.style.display = 'none';
+                }
+
+                sourcesContainer.innerHTML = '';
+                if (data.sources && data.sources.length > 0) {
+                    data.sources.forEach(source => {
+                        const sourceDiv = document.createElement('div');
+                        sourceDiv.className = 'source-item';
+                        sourceDiv.innerHTML = `
+                            <div class="source-header">
+                                <span class="source-title">${source.rank}. ${source.source_file} (Chunk #${source.chunk_id})</span>
+                                <span class="source-score">Score: ${source.rerank_score}</span>
+                            </div>
+                            <div class="source-preview">${source.text_preview}</div>
+                        `;
+                        sourcesContainer.appendChild(sourceDiv);
+                    });
+                } else {
+                    sourcesContainer.innerHTML = '<p>No sources available</p>';
+                }
+
+                answerSection.classList.add('show');
+            })
+            .catch(error => {
+                questionLoading.classList.remove('show');
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function clearDatabase() {
+            if (!confirm('Are you sure you want to clear all documents from the database?')) {
+                return;
+            }
+
+            fetch('/clear', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    alert(data.message);
+                    docCount.textContent = '0';
+                    answerSection.classList.remove('show');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        }
+
+        // Translate answer from Chinese to English
+        function translateAnswer() {
+            if (!currentAnswer) {
+                return;
+            }
+
+            // Disable button and show loading state
+            translateBtn.disabled = true;
+            translateBtn.textContent = '⏳ Translating...';
+
+            fetch('/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: currentAnswer })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Translation error: ' + data.error);
+                    translateBtn.disabled = false;
+                    translateBtn.textContent = '🌐 Translate to English';
+                    return;
+                }
+
+                // Update answer with translation
+                answerText.textContent = data.translation;
+                currentAnswer = data.translation;
+
+                // Change button to show original
+                translateBtn.textContent = '🔄 Show Original';
+                translateBtn.disabled = false;
+                translateBtn.onclick = function() {
+                    answerText.textContent = originalAnswer;
+                    currentAnswer = originalAnswer;
+                    translateBtn.textContent = '🌐 Translate to English';
+                    translateBtn.onclick = translateAnswer;
+                };
+            })
+            .catch(error => {
+                alert('Translation error: ' + error.message);
+                translateBtn.disabled = false;
+                translateBtn.textContent = '🌐 Translate to English';
+            });
+        }
+
+        // Allow Enter key to submit question
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                askQuestion();
+            }
+        });
+    </script>
+</body>
+</html>

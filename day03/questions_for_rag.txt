@@ -1,11 +1,64 @@
 # A Christmas Carol - Reading Comprehension Questions
 
+
+    """
+    Rerank documents using cross-encoder.
+    
+    Args:
+        query: The search query
+        documents: List of document texts
+        top_k: Number of top results to return
+    
+    Returns:
+        List of (score, doc_index) tuples, sorted by score descending
+    """
+
+    """
+    Improved RAG pipeline.
+    
+    Args:
+        question: The question to answer
+        retrieve_k: Number of chunks to retrieve initially (default: 10)
+        use_k: Number of chunks to use after reranking (default: 5)
+        show_sources: Whether to show source chunks (default: True)
+    
+    Returns:
+        dict with 'answer', 'sources', and 'confidence'
+    """
+
+
+    f"""Answer the question based on the context below. 
+
+IMPORTANT INSTRUCTIONS:
+- Only answer if the information is clearly stated in the context
+- If the answer is not in the context, respond with: "I don't have enough information to answer this question."
+- Be concise and specific
+- Use information directly from the context
+
+CONTEXT:
+{context}
+
+QUESTION: {question}
+
+ANSWER:"""
+
+
+questions = [
+    "What is the name of Scrooge's underpaid clerk?",
+    "Who was Scrooge's deceased business partner?",
+    "Who was Scrooge engaged to in his youth, and why did she leave him?",
+    "What is the name of Bob Cratchit's youngest son who is ill?",
+    "What does Scrooge see written on the gravestone that frightens him into changing his ways?",
+    "What is Scrooge's response when his nephew Fred invites him to Christmas dinner at the beginning of the story?",
+    "What specific, generous act does Scrooge perform for the Cratchit family on Christmas morning?"
+]
+
 ## Questions and Answers
 
 1. Who was Scrooge's deceased business partner?
 - Answer: Jacob Marley. He had been dead for seven years at the start of the story, dying on Christmas Eve.
 
-2. What is the name of Scrooge's underpaid clerk?
+2. What is the name of Scrooge's underpaid clerk?   
 - Answer: Bob Cratchit, who works in a cold office and has a large family to support.
 
 3. How many ghosts visit Scrooge in total?

@@ -1,0 +1,18 @@
+# Web Framework
+flask==3.0.3
+
+# Vector Database - Using FAISS instead of ChromaDB for better compatibility
+faiss-cpu==1.8.0
+langchain==0.2.16
+langchain-community==0.2.16
+
+# ML/AI Models
+transformers==4.40.0
+torch>=2.0.0
+sentence-transformers==2.7.0
+
+# Document Processing
+unstructured[pdf,pptx]==0.11.8
+
+# Additional utilities
+numpy>=1.24.0
